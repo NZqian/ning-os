@@ -12,7 +12,7 @@ include common/docker.mk
 # Default to the RPi3.
 BSP ?= rpi3
 
-
+DEV_SERIAL ?= /dev/ttyUSB0
 
 ##--------------------------------------------------------------------------------------------------
 ## Hardcoded configuration values
@@ -72,24 +72,28 @@ OBJCOPY_CMD = rust-objcopy \
     --strip-all            \
     -O binary
 
-EXEC_QEMU = $(QEMU_BINARY) -M $(QEMU_MACHINE_TYPE)
+EXEC_QEMU         = $(QEMU_BINARY) -M $(QEMU_MACHINE_TYPE)
+EXEC_TEST_DISPACH = ruby common/tests/dispach.rb
+EXEC_MINITERM = ruby common/serial/miniterm.rb
 
 ##------------------------------------------------------------------------------
 ## Dockerization
 ##------------------------------------------------------------------------------
 DOCKER_CMD          = docker run -t --rm -v $(shell pwd):/work/os -w /work/os
 DOCKER_CMD_INTERACT = $(DOCKER_CMD) -i
+DOCKER_ARG_DEV      = --privileged -v /dev:/dev
 
 # DOCKER_IMAGE defined in include file (see top of this file).
 DOCKER_QEMU  = $(DOCKER_CMD_INTERACT) $(DOCKER_IMAGE)
 DOCKER_TOOLS = $(DOCKER_CMD) $(DOCKER_IMAGE)
 
-
+DOCKER_CMD_DEV = $(DOCKER_CMD_INTERACT) $(DOCKER_ARG_DEV)
+DOCKER_MINITERM = $(DOCKER_CMD_DEV) $(DOCKER_IMAGE)
 
 ##--------------------------------------------------------------------------------------------------
 ## Targets
 ##--------------------------------------------------------------------------------------------------
-.PHONY: all $(KERNEL_ELF) $(KERNEL_BIN) doc qemu clippy clean readelf objdump nm check
+.PHONY: all $(KERNEL_ELF) $(KERNEL_BIN) doc qemu miniterm clippy clean readelf objdump nm check
 
 all: $(KERNEL_BIN)
 
@@ -127,6 +131,9 @@ qemu: $(KERNEL_BIN)
 	$(call colorecho, "\nLaunching QEMU")
 	@$(DOCKER_QEMU) $(EXEC_QEMU) $(QEMU_RELEASE_ARGS) -kernel $(KERNEL_BIN)
 endif
+
+miniterm:
+	@$(DOCKER_MINITERM) $(EXEC_MINITERM) $(DEV_SERIAL)
 
 ##------------------------------------------------------------------------------
 ## Run clippy
