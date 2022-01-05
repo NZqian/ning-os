@@ -56,7 +56,8 @@ KERNEL_ELF = target/$(TARGET)/release/kernel
 ## Command building blocks
 ##--------------------------------------------------------------------------------------------------
 RUSTFLAGS          = -C link-arg=-T$(LINKER_FILE) $(RUSTC_MISC_ARGS)
-RUSTFLAGS_PEDANTIC = $(RUSTFLAGS) -D warnings -D missing_docs
+#RUSTFLAGS_PEDANTIC = $(RUSTFLAGS) -D warnings -D missing_docs
+RUSTFLAGS_PEDANTIC = $(RUSTFLAGS) -D warnings
 
 FEATURES      = --features bsp_$(BSP)
 COMPILER_ARGS = --target=$(TARGET) \
