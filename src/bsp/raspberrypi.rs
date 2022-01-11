@@ -8,6 +8,7 @@ pub mod console;
 pub mod cpu;
 pub mod driver;
 pub mod memory;
+pub mod display;
 
 use crate::bsp::device_driver;
 
@@ -16,6 +17,9 @@ static GPIO: device_driver::GPIO =
 
 static PL011_UART: device_driver::PL011Uart =
     unsafe { device_driver::PL011Uart::new(memory::map::mmio::PL011_UART_START) };
+
+static FRAME_BUFFER: device_driver::FrameBuffer = 
+    device_driver::FrameBuffer::new(memory::map::mmio::VIDEOCORE_START);
 
 //--------------------------------------------------------------------------------------------------
 // Public Code

@@ -4,6 +4,11 @@
 #![feature(trait_alias)]
 #![no_main]
 #![no_std]
+#![allow(dead_code)]
+#![allow(unused_imports)]
+#![allow(unused_variables)]
+
+use crate::display::interface::DrawPixel;
 
 mod bsp;
 mod console;
@@ -12,6 +17,7 @@ mod driver;
 mod panic_wait;
 mod print;
 mod synchronization;
+mod display;
 
 unsafe fn kernel_init() -> ! {
     use driver::interface::DriverManager;
@@ -28,6 +34,18 @@ fn kernel_main() -> ! {
     use bsp::console::console;
     use console::interface::All;
     use driver::interface::DriverManager;
+
+    use display::Color::*;
+    let colors = [Black, Blue, Green, Cyan, Red, Magenta,
+        Brown, LightGray, DarkGray, LightBlue, LightGreen, LightCyan,
+        Pink, Yellow, White];
+    let mut pos = 100;
+    for color in colors {
+        for i in 0..100 {
+            bsp::display::display().draw_pixel(pos + i, 100, color as u32);
+            pos += 1;
+        }
+    }
 
     println!(
         "[0] {} version {}",
@@ -48,6 +66,7 @@ fn kernel_main() -> ! {
         bsp::console::console().chars_written()
     );
     println!("[4] Echoing input now");
+    
     console().clear_rx();
     loop {
         let c = bsp::console::console().read_char();
