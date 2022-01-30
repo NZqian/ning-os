@@ -27,6 +27,10 @@ pub mod mbox_enum {
     pub const MBOX_TAG_GETFB     :u32 = 0x40001;
     pub const MBOX_TAG_GETPITCH  :u32 = 0x40008;
     pub const MBOX_TAG_LAST      :u32 = 0      ;
+
+
+    pub const SCREEN_WIDTH: u32 = 800;
+    pub const SCREEN_HEIGHT: u32 = 600;
 }
 use mbox_enum::*;
 
@@ -64,7 +68,7 @@ impl MBox {
         Self {
             message: MBoxMessage::new(),
             registers: Registers::new(mmio_video_core_addr),
-            video_core_addr: mmio_video_core_addr
+            video_core_addr: mmio_video_core_addr,
         }
     }
     pub fn mbox_call(&mut self, channel: u32) -> bool {
@@ -74,7 +78,7 @@ impl MBox {
         loop {
             let status = self.registers.mbox_status.get();
             if status & MBOX_FULL == 0 {
-                break
+                break;
             }
             //println!("waiting, status: {}", status);
         }
@@ -85,12 +89,10 @@ impl MBox {
         loop {
             loop {
                 let status = self.registers.mbox_status.get();
-                println!("cur status: {}", status);
                 if status & MBOX_EMPTY == 0 {
                     break;
                 }
             }
-            println!("fuck! not empty");
             if r == self.registers.mbox_read.get() {
                 return self.message.message[1] == MBOX_RESPONSE;
             }
@@ -111,13 +113,13 @@ impl MBoxMessage {
             MBOX_TAG_SETPHYWH, // Tag identifier
             8,                 // Value size in bytes
             0,
-            1920, // Value(width)
-            1080, // Value(height)
+            mbox_enum::SCREEN_WIDTH,  // Value(width)
+            mbox_enum::SCREEN_HEIGHT, // Value(height)
             MBOX_TAG_SETVIRTWH,
             8,
             8,
-            1920,
-            1080,
+            mbox_enum::SCREEN_WIDTH,  // Value(width)
+            mbox_enum::SCREEN_HEIGHT, // Value(height)
             MBOX_TAG_SETVIRTOFF,
             8,
             8,

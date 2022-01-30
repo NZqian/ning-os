@@ -2,7 +2,7 @@
 use super::mailbox;
 use crate::{
     bsp::device_driver::mailbox::mbox_enum,
-    display::interface::{DrawPixel, DrawText, DrawShape},
+    display::interface::{DrawPixel, DrawShape, DrawText},
     driver, println,
     synchronization::{interface::Mutex, NullLock},
 };
@@ -23,8 +23,8 @@ pub struct FrameBuffer {
 impl FrameBufferInner {
     pub const fn new(mmio_video_core_addr: usize) -> Self {
         Self {
-            width: 1920,
-            height: 1080,
+            width: mbox_enum::SCREEN_WIDTH,
+            height: mbox_enum::SCREEN_HEIGHT,
             pitch: 1920,
             isrgb: true,
             fb: 0,
@@ -45,13 +45,13 @@ impl FrameBufferInner {
             self.pitch = mbox.message.message[33];
             self.isrgb = mbox.message.message[24] != 0;
         } else {
-            println!("fuck! mbox message error");
+            panic!("fuck! mbox message error");
         }
-        println!("width: {}", self.width);
-        println!("height: {}", self.height);
-        println!("pitch: {}", self.pitch);
-        println!("is_rgb: {}", self.isrgb);
-        println!("fb: {}", self.fb);
+        //println!("width: {}", self.width);
+        //println!("height: {}", self.height);
+        //println!("pitch: {}", self.pitch);
+        //println!("is_rgb: {}", self.isrgb);
+        //println!("fb: {}", self.fb);
     }
 }
 
@@ -74,8 +74,8 @@ impl DrawPixel for FrameBuffer {
 }
 
 impl DrawText for FrameBuffer {
-    fn write_char(&self, c: char) {
-        
+    fn write_char(&self, x: u32, y: u32, c: char) {
+
     }
     fn write_fmt(&self, args: core::fmt::Arguments) -> core::fmt::Result {
         Ok(())
@@ -83,8 +83,29 @@ impl DrawText for FrameBuffer {
 }
 
 impl DrawShape for FrameBuffer {
-    fn draw_rect(&self, x: usize, y: usize, width: usize, height: usize) {
-        //for 
+    fn draw_line(&self, x1: u32, y1: u32, x2: u32, y2: u32, color: u32) {
+        let (x1_, x2_, y1_, y2_): (u32, u32, u32, u32);
+        if x1 > x2 {
+            (x1_, x2_, y1_, y2_) = (x2, x1, y2, y1);
+        } else {
+            (x1_, x2_, y1_, y2_) = (x1, x2, y1, y2);
+        }
+        let slide: f32 = (y2_ - y1_) as f32 / (x2_ - x1_) as f32;
+        for i in x1_..x2_ + 1 {
+            let y = y1_ + ((i - x1_) as f32 * slide) as u32;
+            self.draw_pixel(i, y, color);
+        }
+    }
+    /// top left point
+    fn draw_rect(&self, x: u32, y: u32, width: u32, height: u32, color: u32) {
+        for i in x..x + width {
+            self.draw_pixel(i, y, color);
+            self.draw_pixel(i, y + height - 1, color);
+        }
+        for i in y + 1..y + height {
+            self.draw_pixel(x, i, color);
+            self.draw_pixel(x + width - 1, i, color);
+        }
     }
 }
 
