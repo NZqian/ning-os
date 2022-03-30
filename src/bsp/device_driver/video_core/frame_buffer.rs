@@ -91,21 +91,23 @@ impl DrawShape for FrameBuffer {
             (x1_, x2_, y1_, y2_) = (x1, x2, y1, y2);
         }
         let slide: f32 = (y2_ - y1_) as f32 / (x2_ - x1_) as f32;
-        for i in x1_..x2_ + 1 {
-            let y = y1_ + ((i - x1_) as f32 * slide) as u32;
-            self.draw_pixel(i, y, color);
+        if slide.is_infinite() {
+            for i in y1_.min(y2_)..=y1_.max(y2) {
+                self.draw_pixel(x1_, i, color);
+            }
+        } else {
+            for i in x1_..=x2_ {
+                let y = y1_ + ((i - x1_) as f32 * slide) as u32;
+                self.draw_pixel(i, y, color);
+            }
         }
     }
     /// top left point
     fn draw_rect(&self, x: u32, y: u32, width: u32, height: u32, color: u32) {
-        for i in x..x + width {
-            self.draw_pixel(i, y, color);
-            self.draw_pixel(i, y + height - 1, color);
-        }
-        for i in y + 1..y + height {
-            self.draw_pixel(x, i, color);
-            self.draw_pixel(x + width - 1, i, color);
-        }
+        self.draw_line(x, y, x + width - 1, y, color);
+        self.draw_line(x, y, x, y + height - 1, color);
+        self.draw_line(x + width - 1, y, x + width - 1, y + height - 1, color);
+        self.draw_line(x, y + height - 1, x + width - 1, y + height - 1, color);
     }
 }
 
